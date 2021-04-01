@@ -33,9 +33,9 @@ local parse = function(content)
 
     for c in content:it() do
 
-        local t = T{c:match(captures['event'])}
-
         c = c:gsub('&lt;', '<'):gsub('&gt;', '>')
+
+        local t = T{c:match(captures['event'])}
 
         if t and t[1] then
             events[t[1]] = {name=t[1], silent=t[2], once=t[3], command=t[4]}
