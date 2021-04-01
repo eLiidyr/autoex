@@ -7,8 +7,7 @@ require('tables')
 require('strings')
 require('logger')
 
-local chat_modes    = {[0]='say', [1]='shout', [3]='tell', [4]='party', [5]='linkshell', [26]='yell', [27]='linkshell', [33]='unity'}
-local player        = windower.ffxi.get_player()
+local player        = false
 local res           = require('resources')
 local files         = require('files')
 local events        = {build={}, registered={}, helpers={}}
@@ -32,14 +31,7 @@ local parse = function(content)
     end
 
     for c in content:it() do
-
-        if c:match('&lt;') then
-            c = c:gsub('&lt;', '<')
-        end
-
-        if c:match('&gt;') then
-            c = c:gsub('&gt;', '>')
-        end
+        c = c:gsub('&lt;', '<'):gsub('&gt;', '>')
 
         if c:match(captures['event']) then
             local t = T{c:match(captures['event'])}
@@ -55,24 +47,34 @@ local parse = function(content)
 
 end
 
--- Build the convert directory and settings directory.
-local convert    = files.new('/convert/instructions.lua')
-local settings  = files.new(('/settings/%s.xml'):format(player.name))
-if not convert:exists() then
-    convert:write('-- COPY ALL YOUR OLD XML FILES YOU WANT TO CONVERT IN TO THIS FOLDER AND FOLLOW THE IN GAME HELP.\n-- //ax help\n-- //ax convert <file_name>')
-
-end
-
-if not settings:exists() then
-    settings:write(('return %s'):format(T({}):tovstring()))
-    
-end
-
 -- Simple round funciton.
 math.round = function(num)
     if num >= 0 then return math.floor(num+.5) 
     else return math.ceil(num-.5) end
 end
+
+windower.register_event('load', 'login', function(...)
+    player = windower.ffxi.get_player()
+
+    -- Build the convert directory and settings directory.
+    local convert   = files.new('/convert/instructions.lua')
+    local settings  = files.new(('/settings/%s.xml'):format(player.name))
+    if not convert:exists() then
+        convert:write('-- COPY ALL YOUR OLD XML FILES YOU WANT TO CONVERT IN TO THIS FOLDER AND FOLLOW THE IN GAME HELP.\n-- //ax help\n-- //ax convert <file_name>')
+
+    end
+
+    if not settings:exists() then
+        settings:write(('return %s'):format(T({}):tovstring()))
+        
+    end
+
+end)
+
+windower.register_event('logout', function(...)
+    player = false
+
+end)
 
 windower.register_event('addon command', function(...)
     local commands  = T{...}
@@ -272,11 +274,17 @@ events.helpers['chat'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
-                windower.send_command(command)
+            local chats = res.chat
 
-                if once then
-                    windower.unregister_event(events.registered[event].id)
+            if m and mode and chats[mode] and chats[mode].en and chats[mode].en:lower() == m:lower() then
+
+                if message and sender and player:lower() == sender:lower() and message:match(find) then
+                    windower.send_command(command)
+
+                    if once then
+                        windower.unregister_event(events.registered[event].id)
+                    end
+
                 end
 
             end
@@ -332,13 +340,11 @@ events.helpers['invite'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local player = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('party invite', function(sender)
+            if player:lower() == sender:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -662,7 +668,7 @@ events.helpers['status'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
+    if event and command and split[2] then
         local m         = split[2]
         local player    = split[3]
         local find      = split[4]
@@ -692,13 +698,11 @@ events.helpers['examined'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local player = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('examined', function(name)
+            if player:lower() == name:lower() then
                 windower.send_command(command)
 
                 if once then
