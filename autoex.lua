@@ -33,13 +33,10 @@ local parse = function(content)
     for c in content:it() do
         c = c:gsub('&lt;', '<'):gsub('&gt;', '>')
 
-        if c:match(captures['event']) then
-            local t = T{c:match(captures['event'])}
-            
-            if t and t[1] then
-                events[t[1]] = {name=t[1], silent=t[2], once=t[3], command=t[4]}
-            end
+        local t = T{c:match(captures['event'])}
 
+        if t and t[1] then
+            events[t[1]] = {name=t[1], silent=t[2], once=t[3], command=t[4]}
         end
 
     end
@@ -49,8 +46,11 @@ end
 
 -- Simple round funciton.
 math.round = function(num)
-    if num >= 0 then return math.floor(num+.5) 
-    else return math.ceil(num-.5) end
+    if num >= 0 then 
+        return math.floor(num+.5) 
+    else 
+        return math.ceil(num-.5)
+    end
 end
 
 windower.register_event('load', 'login', function(...)
@@ -1110,6 +1110,14 @@ events.helpers['mpmax'] = function(event, command, silent, once)
     end
 
 end
+
+windower.register_event('load', 'login', function()
+   player = windower.ffxi.get_player()
+end)
+
+windower.register_event('logout', function()
+   player = false
+end)
 
 --Copyright © 2021, eLiidyr
 --All rights reserved.
