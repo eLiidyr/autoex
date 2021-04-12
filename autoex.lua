@@ -8,9 +8,11 @@ require('strings')
 require('logger')
 
 local player        = false
+local packets       = require('packets')
 local res           = require('resources')
 local files         = require('files')
 local events        = {build={}, registered={}, helpers={}}
+local triggers      = {hp={}, mp={}}
 local color         = '50,220,175'
 
 -- XML Parsing.
@@ -149,6 +151,7 @@ events.helpers['clear'] = function(callback)
         windower.unregister_event(v.id)
     end
     events.build = {}
+    triggers = {hp={}, mp={}}
 
     if callback and type(callback) == 'function' then
         callback()
@@ -195,7 +198,7 @@ events.helpers['login'] = function(event, command, silent, once)
             end)}
 
             if not silent then
-                print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+                print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
             end
 
         else
@@ -209,7 +212,7 @@ events.helpers['login'] = function(event, command, silent, once)
             end)}
 
             if not silent then
-                print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+                print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
             end
 
         end
@@ -240,7 +243,7 @@ events.helpers['logout'] = function(event, command, silent, once)
             end)}
 
             if not silent then
-                print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+                print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
             end
 
         else
@@ -254,7 +257,7 @@ events.helpers['logout'] = function(event, command, silent, once)
             end)}
 
             if not silent then
-                print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+                print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
             end
 
         end
@@ -292,7 +295,7 @@ events.helpers['chat'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -326,7 +329,7 @@ events.helpers['time'] = function(event, command, silent, once)
             end)}
 
             if not silent then
-                print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+                print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
             end
 
         end
@@ -344,6 +347,7 @@ events.helpers['invite'] = function(event, command, silent, once)
         local player = split[2]
 
         events.registered[event] = {event=event, id=windower.register_event('party invite', function(sender)
+            
             if player:lower() == sender:lower() then
                 windower.send_command(command)
 
@@ -356,7 +360,7 @@ events.helpers['invite'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -368,13 +372,13 @@ events.helpers['gainbuff'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local buff  = split[2]
+        local buffs = res.buffs        
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('gain buff', function(id)
+            
+            if buff and buffs and id and buffs[id] and buffs[id].en and buffs[id].en:lower() == buff:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -386,7 +390,7 @@ events.helpers['gainbuff'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -398,13 +402,13 @@ events.helpers['losebuff'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local buff  = split[2]
+        local buffs = res.buffs        
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('lose buff', function(id)
+            
+            if buff and buffs and id and buffs[id] and buffs[id].en and buffs[id].en:lower() == buff:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -416,7 +420,7 @@ events.helpers['losebuff'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -428,13 +432,13 @@ events.helpers['day'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local day   = split[2]
+        local days  = res.days
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('day change', function(new)
+            
+            if day and days and new and days[new] and days[new].en and days[new].en:lower() == day:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -446,7 +450,7 @@ events.helpers['day'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -458,13 +462,21 @@ events.helpers['moon'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local user  = split[2]
+        local Moon  = {percent=windower.ffxi.get_info().moon, phase=windower.ffxi.get_info().moon_phase}
+        local moons = res.moon_phases
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('moon change', function(new, _)
+            
+            if tonumber(user) == nil then
+                windower.send_command(command)
+
+                if once then
+                    windower.unregister_event(events.registered[event].id)
+                end
+
+            elseif tonumber(user) ~= nil then
                 windower.send_command(command)
 
                 if once then
@@ -476,7 +488,7 @@ events.helpers['moon'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -488,13 +500,13 @@ events.helpers['zone'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local zone  = split[2]
+        local zones = res.zones
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('zone change', function(new)
+            
+            if zone and zone and new and zones[new] and zones[new].en and zones[new].en:lower() == zone:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -506,7 +518,7 @@ events.helpers['zone'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -518,13 +530,12 @@ events.helpers['lvup'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local new = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('level up', function(level)
+            
+            if new and level and new == level then
                 windower.send_command(command)
 
                 if once then
@@ -536,7 +547,7 @@ events.helpers['lvup'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -548,13 +559,12 @@ events.helpers['lvdown'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local new = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('level down', function(level)
+            
+            if new and level and new == level then
                 windower.send_command(command)
 
                 if once then
@@ -566,7 +576,7 @@ events.helpers['lvdown'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -578,13 +588,12 @@ events.helpers['gainexp'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local xp = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('gain experience', function(amount)
+            
+            if xp and amount and xp == amount then
                 windower.send_command(command)
 
                 if once then
@@ -596,7 +605,7 @@ events.helpers['gainexp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -608,13 +617,12 @@ events.helpers['chain'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local number = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('gain experience', function(_, chain)
+            
+            if number and chain and number == chain then
                 windower.send_command(command)
 
                 if once then
@@ -626,7 +634,7 @@ events.helpers['chain'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -638,13 +646,13 @@ events.helpers['weather'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local user      = split[2]
+        local weather   = res.weather
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('weather change', function(id)
+            
+            if user and weather and id and weather[id] and weather[id].en and weather[id].en:lower() == user:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -656,7 +664,7 @@ events.helpers['weather'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -669,12 +677,12 @@ events.helpers['status'] = function(event, command, silent, once)
     local split     = event:split('_')
 
     if event and command and split[2] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+        local status    = split[2]
+        local statuses  = res.statuses
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('status change', function(id, _)
+            
+            if status and statuses and id and statuses[id] and statuses[id].en and statuses[id].en:lower() == status:lower() then
                 windower.send_command(command)
 
                 if once then
@@ -686,7 +694,7 @@ events.helpers['status'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -702,6 +710,7 @@ events.helpers['examined'] = function(event, command, silent, once)
         local player = split[2]
 
         events.registered[event] = {event=event, id=windower.register_event('examined', function(name)
+            
             if player:lower() == name:lower() then
                 windower.send_command(command)
 
@@ -714,7 +723,7 @@ events.helpers['examined'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -724,19 +733,21 @@ end
 events.helpers['noammo'] = function(event, command, silent, once)
     local once      = once == 'true' and true or false
     local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command then
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
-                windower.send_command(command)
+        events.registered[event] = {event=event, id=windower.register_event('outgoing chunk', function(id, original)
 
-                if once then
-                    windower.unregister_event(events.registered[event].id)
+            if id == 0x050 then
+                local packed = packets.parse('outgoing', original)
+                
+                if packed['Equip Slot'] == 3 and packed['Item Index'] == 0 then    
+                    windower.send_command(command)
+
+                    if once then
+                        windower.unregister_event(events.registered[event].id)
+                    end
+
                 end
 
             end
@@ -744,7 +755,7 @@ events.helpers['noammo'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -757,12 +768,11 @@ events.helpers['tp'] = function(event, command, silent, once)
     local split     = event:split('_')
 
     if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+        local percent = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('tp change', function(new)
+            
+            if percent and new and percent == new then
                 windower.send_command(command)
 
                 if once then
@@ -774,7 +784,7 @@ events.helpers['tp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -786,25 +796,19 @@ events.helpers['unload'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command then
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
-                windower.send_command(command)
+        events.registered[event] = {event=event, id=windower.register_event('unload', function()
+            windower.send_command(command)
 
-                if once then
-                    windower.unregister_event(events.registered[event].id)
-                end
-
+            if once then
+                windower.unregister_event(events.registered[event].id)
             end
 
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -816,13 +820,12 @@ events.helpers['hp'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local hp = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('hp change', function(new)
+            
+            if hp and new and hp == new then
                 windower.send_command(command)
 
                 if once then
@@ -834,7 +837,7 @@ events.helpers['hp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -846,13 +849,12 @@ events.helpers['hpp'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command and split[2] then
+        local hpp = split[2]
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('hpp change', function(new)
+            
+            if hpp and new and hpp == new then
                 windower.send_command(command)
 
                 if once then
@@ -864,7 +866,7 @@ events.helpers['hpp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -876,25 +878,29 @@ events.helpers['lowhp'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command then
 
-        events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
-            if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
+        events.registered[event] = {event=event, id=windower.register_event('hpp change', function(new) 
+            
+            if not triggers.hp[events.registered[event].id] and new < 20 then
                 windower.send_command(command)
+                triggers.hp[events.registered[event].id] = true
 
                 if once then
                     windower.unregister_event(events.registered[event].id)
+                    triggers.hp[events.registered[event].id] = nil
                 end
+
+
+            elseif triggers.hp[events.registered[event].id] and new > 40 then
+                triggers.hp[events.registered[event].id] = false
 
             end
 
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -906,12 +912,10 @@ events.helpers['criticalhp'] = function(event, command, silent, once)
     local silent    = silent == 'true' and true or false
     local split     = event:split('_')
 
-    if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+    if event and command then
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -924,7 +928,7 @@ events.helpers['criticalhp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -942,6 +946,7 @@ events.helpers['hpmax'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -954,7 +959,7 @@ events.helpers['hpmax'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -972,6 +977,7 @@ events.helpers['mp'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -984,7 +990,7 @@ events.helpers['mp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -1002,6 +1008,7 @@ events.helpers['mpp'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -1014,7 +1021,7 @@ events.helpers['mpp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -1032,6 +1039,7 @@ events.helpers['lowmp'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -1044,7 +1052,7 @@ events.helpers['lowmp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -1062,6 +1070,7 @@ events.helpers['criticalmp'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -1074,7 +1083,7 @@ events.helpers['criticalmp'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
@@ -1092,6 +1101,7 @@ events.helpers['mpmax'] = function(event, command, silent, once)
         local find      = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
+            
             if message and sender and mode and m == chat_modes[mode] and player:lower() == sender:lower() and message:match(find) then
                 windower.send_command(command)
 
@@ -1104,21 +1114,12 @@ events.helpers['mpmax'] = function(event, command, silent, once)
         end)}
 
         if not silent then
-            print(('%s registered! Execute: %s - Flags: Silent: %s, RunOnce: %s'):format(event, command, tostring(silent), tostring(once)))
+            print(('%s registered! Execute: <%s> [ Silent: %s, Once: %s ]'):format(event:upper(), command, tostring(silent), tostring(once)))
         end
 
     end
 
 end
-
-windower.register_event('load', 'login', function()
-   player = windower.ffxi.get_player()
-end)
-
-windower.register_event('logout', function()
-   player = false
-end)
-
 --Copyright © 2021, eLiidyr
 --All rights reserved.
 
