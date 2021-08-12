@@ -121,6 +121,19 @@ windower.register_event('addon command', function(...)
         elseif command == 'r' or command == 'rl' or command == 'reload' then
             windower.send_command('lua r autoex')
 
+        elseif command == 'h' or command == 'help' then
+            local help = {
+                
+                ('\\cs(%s)Addon commands:\\cr'):format('20,255,180'),
+                (' %s\\cs(%s)//ax convert <filename>\\cr\\cs(%s): Converts the .XML file in the /convert/ folder to Lua.\\cr'):format('':lpad(' ', 2), '100,200,100', '255,255,255'),
+                (' %s\\cs(%s)//ax load <filename>\\cr\\cs(%s): Loads the .lua autoex in the /settings/ folder.\\cr'):format('':lpad(' ', 2), '100,200,100', '255,255,255'),
+                (' %s\\cs(%s)//ax reload\\cr\\cs(%s): Realoads Autoex addon. (Supports "r" & "rl" command)\\cr'):format('':lpad(' ', 2), '100,200,100', '255,255,255'),
+                (' %s\\cs(%s)//ax help\\cr\\cs(%s): Displays help in the console. (Supports "h" command)\\cr'):format('':lpad(' ', 2), '100,200,100', '255,255,255'),
+                ('\\cs(%s)If your .XML file uses <import>, then all xml files need to be converted prior to loading.\\cr'):format('20,255,180'),
+
+            }
+            print(table.concat(help, '\n'))
+
         elseif command == 'debug' then
             table.print(events.registered)
 
