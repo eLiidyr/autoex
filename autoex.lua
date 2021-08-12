@@ -1,34 +1,34 @@
-_addon.name     = 'autoex'
-_addon.author   = 'Elidyr'
-_addon.version  = '1.20210812'
-_addon.command  = 'ax'
+_addon.name = 'autoex'
+_addon.author = 'Elidyr'
+_addon.version = '1.20210812'
+_addon.command = 'ax'
 
 require('tables')
 require('strings')
 require('logger')
 
-local player        = false
-local packets       = require('packets')
-local res           = require('resources')
-local files         = require('files')
-local events        = {build={}, registered={}, helpers={}}
-local triggers      = {hp={}, mp={}}
-local color         = '50,220,175'
-local event_names   = {
+local player = false
+local packets = require('packets')
+local res = require('resources')
+local files = require('files')
+local events = {build={}, registered={}, helpers={}}
+local triggers = {hp={}, mp={}}
+local color = '50,220,175'
+local event_names = {
     'login','logout','chat','time','invite','login','gainbuff','losebuff','day','moon','zone','lvup','lvdown','gainexp','chain','weather','status','examined','noammo','tp','hp','hpp','lowhp','criticalhp','hpmax','hpplt','hppgt','mp','mpp','lowmp','criticalmp','mpmax','mpplt','mppgt'
 }
 
 -- XML Parsing.
 local parse = function(content)
-    local content   = content or false
-    local events    = {}
-    local captures  = {
+    local content = content or false
+    local events = {}
+    local captures = {
 
-        ['header']  = '(<xml version="[%d%.]+">)',
-        ['start']   = '<autoexec>',
-        ['import']  = '<import>(.*)([.xml])</import>',
-        ['event']   = '<register event="([%w%_]+)" silent="([truefalse]+)" runonce="([truefalse]+)">(.*)</register>',
-        ['start']   = '</autoexec>',
+        ['header'] = '(<xml version="[%d%.]+">)',
+        ['start'] = '<autoexec>',
+        ['import'] = '<import>(.*)([.xml])</import>',
+        ['event'] = '<register event="([%w%_]+)" silent="([truefalse]+)" runonce="([truefalse]+)">(.*)</register>',
+        ['start'] = '</autoexec>',
 
     }
     if not content then
@@ -72,8 +72,8 @@ windower.register_event('load', 'login', function(...)
     player = windower.ffxi.get_player()
 
     -- Build the convert directory and settings directory.
-    local convert   = files.new('/convert/instructions.lua')
-    local settings  = files.new(('/settings/%s.lua'):format(player.name))
+    local convert = files.new('/convert/instructions.lua')
+    local settings = files.new(('/settings/%s.lua'):format(player.name))
     if not convert:exists() then
         convert:write('-- COPY ALL YOUR OLD XML FILES THAT YOU WANT TO CONVERT, IN TO THE "CONVERT" FOLDER, AND FOLLOW THE IN GAME HELP.\n-- //ax help\n-- //ax convert <file_name>')
 
@@ -95,8 +95,8 @@ windower.register_event('logout', function(...)
 end)
 
 windower.register_event('addon command', function(...)
-    local commands  = T{...}
-    local command   = commands[1] or false
+    local commands = T{...}
+    local command = commands[1] or false
 
     if command then
         local command = command:lower()
@@ -275,9 +275,9 @@ events.helpers['build'] = function()
 end
 
 events.helpers['login'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local player = split[2]
@@ -309,9 +309,9 @@ events.helpers['login'] = function(event, command, silent, once)
 end
 
 events.helpers['logout'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local player = split[2]
@@ -343,14 +343,14 @@ events.helpers['logout'] = function(event, command, silent, once)
 end
 
 events.helpers['chat'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] and split[3] and split[4] then
-        local m         = split[2]
-        local player    = split[3]
-        local find      = split[4]
+        local m = split[2]
+        local player = split[3]
+        local find = split[4]
 
         events.registered[event] = {event=event, id=windower.register_event('chat message', function(message, sender, mode)
             local chats = res.chat
@@ -380,9 +380,9 @@ events.helpers['chat'] = function(event, command, silent, once)
 end
 
 events.helpers['time'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local temp = split[2]:split('.')
@@ -391,11 +391,11 @@ events.helpers['time'] = function(event, command, silent, once)
             local time = {h=tonumber(temp[1]), m=tonumber(temp[2])}
 
             events.registered[event] = {event=event, id=windower.register_event('time change', function(new, old)
-                local n_hour    = tonumber(math.floor(new/60))
-                local n_minute  = tonumber(math.round(((new/60)-n_hour)*60))
-                local o_hour    = tonumber(math.floor(old/60))
-                local o_minute  = tonumber(math.round(((old/60)-o_hour)*60))
-                local command   = command:gsub('{NEW_HOUR}', n_hour):gsub('{NEW_MINUTE}', n_minute):gsub('{OLD_HOUR}', o_hour):gsub('{OLD_MINUTE}', o_minute)
+                local n_hour = tonumber(math.floor(new/60))
+                local n_minute = tonumber(math.round(((new/60)-n_hour)*60))
+                local o_hour = tonumber(math.floor(old/60))
+                local o_minute = tonumber(math.round(((old/60)-o_hour)*60))
+                local command = command:gsub('{NEW_HOUR}', n_hour):gsub('{NEW_MINUTE}', n_minute):gsub('{OLD_HOUR}', o_hour):gsub('{OLD_MINUTE}', o_minute)
 
                 if windower.wc_match(n_hour, time.h) and windower.wc_match(n_minute, time.m) then
                     windower.send_command(command)
@@ -419,9 +419,9 @@ events.helpers['time'] = function(event, command, silent, once)
 end
 
 events.helpers['invite'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local player = split[2]
@@ -449,9 +449,9 @@ events.helpers['invite'] = function(event, command, silent, once)
 end
 
 events.helpers['gainbuff'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local buff = split[2]
@@ -484,9 +484,9 @@ events.helpers['gainbuff'] = function(event, command, silent, once)
 end
 
 events.helpers['losebuff'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local buff = split[2]
@@ -519,9 +519,9 @@ events.helpers['losebuff'] = function(event, command, silent, once)
 end
 
 events.helpers['day'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local day = split[2]
@@ -554,9 +554,9 @@ events.helpers['day'] = function(event, command, silent, once)
 end
 
 events.helpers['moon'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local phase = split[2]
@@ -590,9 +590,9 @@ events.helpers['moon'] = function(event, command, silent, once)
 end
 
 events.helpers['moonpct'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local percent = split[2]
@@ -627,9 +627,9 @@ events.helpers['moonpct'] = function(event, command, silent, once)
 end
 
 events.helpers['zone'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local zone  = split[2]
@@ -662,9 +662,9 @@ events.helpers['zone'] = function(event, command, silent, once)
 end
 
 events.helpers['lvup'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local new = split[2]
@@ -692,9 +692,9 @@ events.helpers['lvup'] = function(event, command, silent, once)
 end
 
 events.helpers['lvdown'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local new = split[2]
@@ -722,9 +722,9 @@ events.helpers['lvdown'] = function(event, command, silent, once)
 end
 
 events.helpers['gainexp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local xp = split[2]
@@ -752,9 +752,9 @@ events.helpers['gainexp'] = function(event, command, silent, once)
 end
 
 events.helpers['chain'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local number = split[2]
@@ -782,9 +782,9 @@ events.helpers['chain'] = function(event, command, silent, once)
 end
 
 events.helpers['weather'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local weather = split[2]
@@ -817,9 +817,9 @@ events.helpers['weather'] = function(event, command, silent, once)
 end
 
 events.helpers['status'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local status = split[2]
@@ -852,9 +852,9 @@ events.helpers['status'] = function(event, command, silent, once)
 end
 
 events.helpers['examined'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local player = split[2]
@@ -882,8 +882,8 @@ events.helpers['examined'] = function(event, command, silent, once)
 end
 
 events.helpers['noammo'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
 
     if event and command then
 
@@ -914,9 +914,9 @@ events.helpers['noammo'] = function(event, command, silent, once)
 end
 
 events.helpers['tp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local percent = split[2]
@@ -944,9 +944,9 @@ events.helpers['tp'] = function(event, command, silent, once)
 end
 
 events.helpers['unload'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command then
 
@@ -968,9 +968,9 @@ events.helpers['unload'] = function(event, command, silent, once)
 end
 
 events.helpers['hp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local hp = split[2]
@@ -998,9 +998,9 @@ events.helpers['hp'] = function(event, command, silent, once)
 end
 
 events.helpers['hpp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local hpp = split[2]
@@ -1028,9 +1028,9 @@ events.helpers['hpp'] = function(event, command, silent, once)
 end
 
 events.helpers['lowhp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command then
 
@@ -1057,9 +1057,9 @@ events.helpers['lowhp'] = function(event, command, silent, once)
 end
 
 events.helpers['criticalhp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command then
 
@@ -1086,9 +1086,9 @@ events.helpers['criticalhp'] = function(event, command, silent, once)
 end
 
 events.helpers['hpmax'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local hp = split[2]
@@ -1116,9 +1116,9 @@ events.helpers['hpmax'] = function(event, command, silent, once)
 end
 
 events.helpers['mp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local mp = split[2]
@@ -1146,9 +1146,9 @@ events.helpers['mp'] = function(event, command, silent, once)
 end
 
 events.helpers['mpp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local hpp = split[2]
@@ -1176,9 +1176,9 @@ events.helpers['mpp'] = function(event, command, silent, once)
 end
 
 events.helpers['lowmp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command then
 
@@ -1205,9 +1205,9 @@ events.helpers['lowmp'] = function(event, command, silent, once)
 end
 
 events.helpers['criticalmp'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command then
 
@@ -1234,9 +1234,9 @@ events.helpers['criticalmp'] = function(event, command, silent, once)
 end
 
 events.helpers['mpmax'] = function(event, command, silent, once)
-    local once      = once == 'true' and true or false
-    local silent    = silent == 'true' and true or false
-    local split     = event:split('_')
+    local once = once == 'true' and true or false
+    local silent = silent == 'true' and true or false
+    local split = event:split('_')
 
     if event and command and split[2] then
         local mp = split[2]
