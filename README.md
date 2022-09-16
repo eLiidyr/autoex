@@ -150,9 +150,8 @@ return {
    * Triggers when a weather changes and matches a specified name. [Weather](https://github.com/Windower/Resources/blob/master/resources_data/weather.lua)
      * `<name>`: Name of the weather being changed too.
    * **String Interpolation:**
-     * {NEW} - English name of the new weather.
-     * {OLD} - English name of the previous weather.
-     * Example: \["command"\]="echo Weather changed from {OLD} to {NEW}."
+     * {WEATHER} - English name of the new weather.
+     * Example: \["command"\]="echo Weather is currently: {WEATHER}."
 
  * ### Moon: `moon_<name>`
    * Triggers when the moon changes and is a specified phase. [Moon Phases](https://github.com/Windower/Resources/blob/master/resources_data/moon_phases.lua)
